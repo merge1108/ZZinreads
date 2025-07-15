@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(mkdir:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(true)",
+      "Bash(kill:*)",
+      "Bash(taskkill:*)",
+      "Bash(npx tsc:*)",
+      "Bash(docker build:*)",
+      "Bash(gcloud builds submit:*)",
+      "Bash(gcloud beta builds submit:*)",
+      "Bash(gcloud logging read:*)",
+      "Bash(git add:*)"
+    ],
+    "deny": []
+  }
+}

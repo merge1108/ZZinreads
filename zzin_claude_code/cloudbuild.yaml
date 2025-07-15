@@ -1,0 +1,52 @@
+steps:
+  # Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', 'gcr.io/${PROJECT_ID}/google-ads-notion-sync:${SHORT_SHA}',
+      '-t', 'gcr.io/${PROJECT_ID}/google-ads-notion-sync:latest',
+      '.'
+    ]
+
+  # Push the container image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/${PROJECT_ID}/google-ads-notion-sync:${SHORT_SHA}']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/${PROJECT_ID}/google-ads-notion-sync:latest']
+
+  # Deploy container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args: [
+      'run', 'deploy', 'google-ads-notion-sync',
+      '--image', 'gcr.io/${PROJECT_ID}/google-ads-notion-sync:${SHORT_SHA}',
+      '--region', 'asia-northeast3',
+      '--platform', 'managed',
+      '--allow-unauthenticated',
+      '--port', '8080',
+      '--memory', '2Gi',
+      '--cpu', '2',
+      '--min-instances', '0',
+      '--max-instances', '10',
+      '--concurrency', '80',
+      '--timeout', '900',
+      '--cpu-throttling',
+      '--execution-environment', 'gen2',
+      '--set-env-vars', 'NODE_ENV=production,GOOGLE_CLOUD_PROJECT=${PROJECT_ID}',
+      '--service-account', '${_SERVICE_ACCOUNT_EMAIL}',
+      '--update-labels', 'app=google-ads-notion-sync,version=${SHORT_SHA}'
+    ]
+
+# Store images in Google Container Registry
+images:
+  - 'gcr.io/${PROJECT_ID}/google-ads-notion-sync:${SHORT_SHA}'
+  - 'gcr.io/${PROJECT_ID}/google-ads-notion-sync:latest'
+
+# Substitutions for build configuration
+substitutions:
+  _SERVICE_ACCOUNT_EMAIL: 'zzinreads@zzinreads-gcp.iam.gserviceaccount.com'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'

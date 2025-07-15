@@ -1,0 +1,112 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: google-ads-notion-sync
+  labels:
+    cloud.googleapis.com/location: asia-northeast3
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/execution-environment: gen2
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/execution-environment: gen2
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "10"
+    spec:
+      containerConcurrency: 100
+      timeoutSeconds: 300
+      serviceAccountName: google-ads-notion-sync@PROJECT_ID.iam.gserviceaccount.com
+      containers:
+      - image: gcr.io/PROJECT_ID/google-ads-notion-sync:latest
+        ports:
+        - name: http1
+          containerPort: 8080
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "8080"
+        - name: GOOGLE_ADS_DEVELOPER_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: google-ads-config
+              key: developer-token
+        - name: GOOGLE_ADS_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: google-ads-config
+              key: client-id
+        - name: GOOGLE_ADS_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: google-ads-config
+              key: client-secret
+        - name: GOOGLE_ADS_REFRESH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: google-ads-config
+              key: refresh-token
+        - name: GOOGLE_ADS_MCC_CUSTOMER_ID
+          valueFrom:
+            secretKeyRef:
+              name: google-ads-config
+              key: mcc-customer-id
+        - name: GOOGLE_ADS_SUB_ACCOUNTS
+          valueFrom:
+            secretKeyRef:
+              name: google-ads-config
+              key: sub-accounts
+        - name: NOTION_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: notion-config
+              key: api-key
+        - name: NOTION_DATABASE_ID
+          valueFrom:
+            secretKeyRef:
+              name: notion-config
+              key: database-id
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: app-config
+              key: jwt-secret
+        - name: ADMIN_PASSWORD_HASH
+          valueFrom:
+            secretKeyRef:
+              name: app-config
+              key: admin-password-hash
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-config
+              key: api-key
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+          requests:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
+  traffic:
+  - percent: 100
+    latestRevision: true
