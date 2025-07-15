@@ -1,16 +1,25 @@
-# Use Node.js 18 Alpine for production
+# Use Node.js 18 Alpine
 FROM node:18-alpine
+
+# Install build tools
+RUN apk add --no-cache python3 make g++
 
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and install only production dependencies
+# Copy package files
 COPY package*.json ./
-RUN npm ci --only=production
+COPY client/package*.json ./client/
 
-# Copy pre-built application
-COPY dist ./dist
-COPY client/build ./client/build
+# Install dependencies
+RUN npm ci
+RUN cd client && npm ci
+
+# Copy source code
+COPY . .
+
+# Build the application
+RUN npm run build
 
 # Create logs directory
 RUN mkdir -p logs
