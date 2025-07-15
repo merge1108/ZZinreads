@@ -3,26 +3,26 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'build',
-      '-t', 'gcr.io/${PROJECT_ID}/google-ads-notion-sync:${SHORT_SHA}',
-      '-t', 'gcr.io/${PROJECT_ID}/google-ads-notion-sync:latest',
+      '-t', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:${SHORT_SHA}',
+      '-t', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest',
       '.'
     ]
 
-  # Push the container image to Container Registry
+  # Push the container image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/${PROJECT_ID}/google-ads-notion-sync:${SHORT_SHA}']
+    args: ['push', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:${SHORT_SHA}']
 
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/${PROJECT_ID}/google-ads-notion-sync:latest']
+    args: ['push', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest']
 
   # Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args: [
-      'run', 'deploy', 'google-ads-notion-sync',
-      '--image', 'gcr.io/${PROJECT_ID}/google-ads-notion-sync:${SHORT_SHA}',
-      '--region', 'asia-northeast3',
-      '--platform', 'managed',
+      'run', 'deploy', '${_SERVICE_NAME}',
+      '--image', '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:${SHORT_SHA}',
+      '--region', '${_DEPLOY_REGION}',
+      '--platform', '${_PLATFORM}',
       '--allow-unauthenticated',
       '--port', '8080',
       '--memory', '2Gi',
@@ -34,18 +34,13 @@ steps:
       '--cpu-throttling',
       '--execution-environment', 'gen2',
       '--set-env-vars', 'NODE_ENV=production,GOOGLE_CLOUD_PROJECT=${PROJECT_ID}',
-      '--service-account', '${_SERVICE_ACCOUNT_EMAIL}',
-      '--update-labels', 'app=google-ads-notion-sync,version=${SHORT_SHA}'
+      '--service-account', 'zzinreads@zzinreads-gcp.iam.gserviceaccount.com'
     ]
 
-# Store images in Google Container Registry
+# Store images in Artifact Registry
 images:
-  - 'gcr.io/${PROJECT_ID}/google-ads-notion-sync:${SHORT_SHA}'
-  - 'gcr.io/${PROJECT_ID}/google-ads-notion-sync:latest'
-
-# Substitutions for build configuration
-substitutions:
-  _SERVICE_ACCOUNT_EMAIL: 'zzinreads@zzinreads-gcp.iam.gserviceaccount.com'
+  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:${SHORT_SHA}'
+  - '${_AR_HOSTNAME}/${_AR_PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest'
 
 options:
   logging: CLOUD_LOGGING_ONLY
