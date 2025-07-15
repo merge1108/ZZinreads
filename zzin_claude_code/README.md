@@ -2,7 +2,7 @@
 
 Google Ads MCC 계정의 캠페인 정보를 Notion 데이터베이스와 자동으로 동기화하는 서버리스 웹앱입니다.
 
-🚀 **배포 상태**: Cloud Run europe-west1에 자동 배포 설정 완료
+🚀 **배포 상태**: Cloud Run europe-west1에 새로운 트리거로 자동 배포 준비 완료
 
 ## 주요 기능
 
